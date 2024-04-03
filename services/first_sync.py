@@ -1,5 +1,8 @@
 import mysql.connector
 
+# import location.py which is in the same directory as first_sync.py
+from utils.location import fetch_site_id
+
 class FirstSync:
     def __init__(self, env):
         self.host = env['HOST']
@@ -22,6 +25,7 @@ class FirstSync:
 
         # Create a cursor object to execute SQL queries
         cursor = connection.cursor(dictionary=True)
+        self.site_id = fetch_site_id(cursor)
 
         # Loop through the tables and sync the records
         for table in self.tables:
@@ -88,7 +92,7 @@ class FirstSync:
 
         # Example transformation: append site_id to each record the record will not have such a column
         for record in records:
-            record['site_id'] = 1
+            record['site_id'] = self.site_id
             transformed_records.append(record)
             print(record)
 
