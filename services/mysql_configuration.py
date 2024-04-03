@@ -45,9 +45,6 @@ def update_mysql_config():
 
     with open(config_file, 'w') as configfile:
         config.write(configfile)
-        
+
     # Restart the MySQL service
     subprocess.run(['sudo', 'systemctl', 'restart', 'mysql'], check=True)
-
-if __name__ == "__main__":
-    update_mysql_config()
