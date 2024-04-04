@@ -4,6 +4,12 @@ def map_keys_to_columns(data, table_columns_map):
     columns_map = table_columns_map.get(table_name, {})
     return {columns_map.get(key, key): value for key, value in data.items()}
 
+def process_list(data, table_columns_map):
+    result = []
+    for item in data:
+        result.append(process_request(item, table_columns_map))
+    return result
+
 # def main():
 #     data = {
 #   "operation": "DELETE",

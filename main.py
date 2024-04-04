@@ -3,8 +3,8 @@ import time
 
 # local imports
 from services.first_sync import FirstSync
-from services.map_table import MapTable
 from services.table_manager import TableManager
+from services.bin_log_manager import BinLogManager
 
 
 def read_env_in_memory():
@@ -34,11 +34,7 @@ def main():
         if env['FIRST_RUN'] == '0':
             process_first_run(env)
         else:
-            data = MapTable(queries=queries, env=env).post_data
-            print(data)
-
-            # Send the data to the API here
-
+            BinLogManager(env).process_logs()
         time.sleep(int(env['SYNC_INTERVAL']))  # sleep for 60 seconds # should updated to use configured time
 
 

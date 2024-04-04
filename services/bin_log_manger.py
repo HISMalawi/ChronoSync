@@ -5,9 +5,10 @@ import json
 from utils.connector import fetch_cursor
 from utils.location import fetch_site_id
 from sync_manager import SyncManager
+from log_converter import process_list
 
 class BinLogManager:
-    def __init__(self, env):
+    def __init__(self, env, table_columns_map):
         self.env = env
         self.bin_log_folder = env['LOG_PATH']
         self.transform_data = env['TRANSFORM'] == '1'
@@ -15,6 +16,7 @@ class BinLogManager:
         cursor = result[0]
         connection = result[1]
         self.site_id = fetch_site_id(cursor)
+        self.table_columns_map = table_columns_map
         connection.close()
 
 
@@ -42,9 +44,7 @@ class BinLogManager:
             result = subprocess.check_output(f"mysqlbinlog -v {file_path} | grep '###'", shell=True)
             if result:
                 data = parse_data(result.decode('utf-8'))
-                # we need to call the decoder her
-                # once decoder is done we call the sync manager
-                # SyncManager(self.env).process_data(data)
+                SyncManager(self.env).process_data(process_list(data, self.table_columns_map))
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
             return False
