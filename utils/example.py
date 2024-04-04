@@ -25,7 +25,7 @@ def parse_data(data):
         for i, gem in enumerate(gems):
             if gem:
                 key, value = gem.split('=')
-                data[f"@{key}"] = value.strip()
+                data[f"@{key}"] = value.strip().strip("'").strip('"')
         current_operation = {"operation": op_value, "database": database_name, "table": table_name, "data": data}
         parsed_data.append(current_operation)
 
