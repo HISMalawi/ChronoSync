@@ -34,7 +34,6 @@ class MapTable:
             query["data"] = updated_data  # Update the query's data dictionary
 
             self.post_data.append(updated_data)
-        print(self.post_data)
         return self.post_data
 
 
