@@ -3,6 +3,7 @@ import time
 
 # local imports
 from services.first_sync import FirstSync
+from services.map_table import MapTable
 
 def read_env_in_memory():
     env = {}
@@ -28,7 +29,13 @@ def main():
         if env['FIRST_RUN'] == '0':
             process_first_run(env)
         else:
+            queries = [
+                "INSERT INTO drug_order VALUES (?, ?, ?, ?) WHERE @2 = 23)",
+                "UPDATE encounter SET obs_name = 'name here' WHERE @3 = 1 ",
+                "DELETE FROM person_address WHERE @1 = 1"
+            ]
             print('Syncing records... using bin logs')
+            MapTable(queries=queries, env=env)
         time.sleep(int(env['SYNC_INTERVAL']))  # sleep for 60 seconds # should updated to use configured time
 
 if __name__ == "__main__":
