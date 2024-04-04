@@ -98,6 +98,9 @@ def main():
             print('Syncing records... using bin logs')
             data = MapTable(queries=queries, env=env).post_data
             print(data)
+
+            # Send the data to the API here
+
         time.sleep(int(env['SYNC_INTERVAL']))  # sleep for 60 seconds # should updated to use configured time
 
 
