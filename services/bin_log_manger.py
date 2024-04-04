@@ -40,7 +40,8 @@ class BinLogManager:
             result = subprocess.check_output(f"mysqlbinlog -v {file_path} | grep '###'", shell=True)
             if result:
                 data = parse_data(result.decode('utf-8'))
-        # catch all exceptions
+                # we need to call the decoder her
+                # once decoder is done we call the sync manager
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
             return False
