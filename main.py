@@ -32,6 +32,7 @@ def main():
         if env['FIRST_RUN'] == '0':
             process_first_run(env)
         else:
+            # Replace the queries with the actual logs
             queries = [
                 {
                     "operation": "UPDATE",
