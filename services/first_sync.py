@@ -1,5 +1,3 @@
-import mysql.connector
-
 # import location.py which is in the same directory as first_sync.py
 from utils.location import fetch_site_id
 from utils.connector import fetch_cursor
