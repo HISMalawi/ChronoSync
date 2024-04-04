@@ -1,10 +1,13 @@
-# import location.py which is in the same directory as first_sync.py
+import json
+
 from utils.location import fetch_site_id
 from utils.connector import fetch_cursor
+from sync_manager import SyncManager
 
 class FirstSync:
     def __init__(self, env):
         result = fetch_cursor(env)
+        self.env = env
         self.cursor = result[0]
         self.connection = result[1]
         self.tables = env['TRANS_TABLE'].split(',')
@@ -38,7 +41,7 @@ class FirstSync:
         else:
             return f"SELECT * FROM {self.table} WHERE date_changed >= '2024-01-01 00:00:00' AND date_changed <= NOW() AND date_created < '2024-01-01 00:00:00'"
 
-    def sync_table(self,):
+    def sync_table(self):
         # Sync new records
         self.sync_new_records()
         self.sync_modified_records()
@@ -52,7 +55,9 @@ class FirstSync:
         records_to_sync = []
 
         if self.transform:
-            records_to_sync = self.transform_records(records)
+            records_to_sync = self.process_output(self.transform_records(records), 'INSERT')
+        else:
+            self.process_output(records, 'INSERT')
 
         # Sync the transformed records to the central server
         self.sync_to_server(records_to_sync)
@@ -67,12 +72,14 @@ class FirstSync:
         records_to_sync = []
 
         if self.transform:
-            records_to_sync = self.transform_records(records)
+            records_to_sync = self.process_output(self.transform_records(records), 'UPDATE')
+        else:
+            self.process_output(records, 'UPDATE')
 
         # Sync the transformed records to the central server
         self.sync_to_server(records_to_sync)
 
-    def transform_records(self, records):
+    def transform_records(self, records, operation):
         # Perform your transformations on the records here
         transformed_records = []
 
@@ -80,10 +87,14 @@ class FirstSync:
         for record in records:
             record['site_id'] = self.site_id
             transformed_records.append(record)
-            print(record)
 
         return transformed_records
 
     def sync_to_server(self, records):
-        # Sync the records to the central server here
-        print(f"Syncing {len(records)} records to the central server...")
+        SyncManager(self.env).process_data(records)
+
+    def process_output(self, records, operation):
+        output = []
+        for record in records:
+            output.append({'operation': operation, 'database': self.env['DATABASE'], 'table': self.table, 'data': record})
+        return json.dumps(output, indent=1)

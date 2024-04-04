@@ -4,11 +4,13 @@ import json
 
 from utils.connector import fetch_cursor
 from utils.location import fetch_site_id
+from sync_manager import SyncManager
 
 class BinLogManager:
-    def __init__(self, bin_log_folder, transform_data):
-        self.bin_log_folder = bin_log_folder
-        self.transform_data = transform_data
+    def __init__(self, env):
+        self.env = env
+        self.bin_log_folder = env['LOG_PATH']
+        self.transform_data = env['TRANSFORM'] == '1'
         result = fetch_cursor()
         cursor = result[0]
         connection = result[1]
@@ -42,6 +44,7 @@ class BinLogManager:
                 data = parse_data(result.decode('utf-8'))
                 # we need to call the decoder her
                 # once decoder is done we call the sync manager
+                # SyncManager(self.env).process_data(data)
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
             return False

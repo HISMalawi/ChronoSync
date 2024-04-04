@@ -8,21 +8,12 @@ class SyncManager:
         self.client = RestClient()
 
     def process_data(self, data):
-        try:
-            # Initiate login using rest_client
-            self.login()
-
-            # Push the data to the remote server
-            # check whether the data is a list or a single object
-            if isinstance(data, list):
-                for item in data:
-                    self.process_request(item)
-            else:
-                self.process_request(data)
-        except Exception as e:
-            # Handle any exceptions here
-            print(f"An error occurred: {str(e)}")
-            return False
+        self.login()
+        if isinstance(data, list):
+            for item in data:
+                self.process_request(item)
+        else:
+            self.process_request(data)
 
     def login(self):
         result = self.client.post('/login', data={'username': self.username, 'password': self.password})
