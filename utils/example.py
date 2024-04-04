@@ -3,7 +3,6 @@ import re
 import json
 
 def parse_data(data):
-    print(f"Data: {data}")
     operations = re.split(r'### UPDATE|### INSERT INTO|### DELETE FROM', data)
     parsed_data = []
     operation_types = ["UPDATE", "INSERT", "DELETE"]
@@ -28,7 +27,7 @@ def parse_data(data):
                 data[f"@{key}"] = value.strip().strip("'").strip('"')
         current_operation = {"operation": op_value, "database": database_name, "table": table_name, "data": data}
         parsed_data.append(current_operation)
-
+    print(f"Data: {parsed_data}")
     return json.dumps(parsed_data, indent=1)
 
 def main():

@@ -1,11 +1,12 @@
 import os
 import re
+import json
 
 class BinLogManager:
     def __init__(self, bin_log_folder):
         self.bin_log_folder = bin_log_folder
 
-    def process_next_file(self):
+    def process_logs(self):
         # Get the list of bin log files in the folder
         bin_log_files = os.listdir(self.bin_log_folder)
         pattern = r"(.*)-bin.(\d+)"
@@ -35,23 +36,29 @@ class BinLogManager:
         return True
     
     def parse_data(data):
-        operations = re.split(r'### UPDATE|### INSERT INTO|### DELETE', data)
+        operations = re.split(r'### UPDATE|### INSERT INTO|### DELETE FROM', data)
         parsed_data = []
-        current_operation = {}
-        operation_types = ["UPDATE", "INSERT INTO", "DELETE"]
+        operation_types = ["UPDATE", "INSERT", "DELETE"]
 
-        for i, operation in enumerate(operations[1:], start=1):
-            operation = operation.strip()
-            if i < len(operations) - 1:  # if not the last operation
-                operation, next_operation_type = re.split(r'### UPDATE|### INSERT INTO|### DELETE', operation)
-            current_operation = {"operation": operation_types[i % len(operation_types)] + operation}
-            lines = operation.split("\n")
-            for line in lines:
-                if line.startswith("WHERE") or line.startswith("SET"):
-                    current_operation[line] = {}
-                elif line.startswith("@"):
-                    key, value = line.split("=")
-                    current_operation[list(current_operation.keys())[-1]][key] = value.strip()
+        for i, operation in enumerate(operations[1:]):
+            op_value = operation_types[i % len(operation_types)]
+            result = []
+            if 'SET' in operation:
+                result = operation.replace('###', '').replace('\n', '').strip().split('SET')
+            elif 'WHERE' in operation:
+                result = operation.replace('###', '').replace('\n', '').strip().split('WHERE')
+            else:
+                # throw an error because this will be unexpected
+                raise ValueError("Operation does not contain SET or WHERE")
+            database_name = result[0].split('`')[1]
+            table_name = result[0].split('`')[3]
+            gems = result[1].strip().split('@')
+            data = {}
+            for i, gem in enumerate(gems):
+                if gem:
+                    key, value = gem.split('=')
+                    data[f"@{key}"] = value.strip().strip("'").strip('"')
+            current_operation = {"operation": op_value, "database": database_name, "table": table_name, "data": data}
             parsed_data.append(current_operation)
-
-        return parsed_data
+        
+        return json.dumps(parsed_data, indent=1)
