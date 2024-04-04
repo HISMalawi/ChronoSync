@@ -2,7 +2,7 @@ import os
 import re
 import json
 
-def parse_data(data):
+def parse_data(data, transform_data):
     operations = re.split(r'### UPDATE|### INSERT INTO|### DELETE FROM', data)
     parsed_data = []
     operation_types = ["UPDATE", "INSERT", "DELETE"]
@@ -21,6 +21,8 @@ def parse_data(data):
         table_name = result[0].split('`')[3]
         gems = result[1].strip().split('@')
         data = {}
+        if transform_data:
+            data["site_id"] = 700
         for i, gem in enumerate(gems):
             if gem:
                 key, value = gem.split('=')
@@ -92,7 +94,7 @@ def main():
 ###   @12=NULL
 ###   @13=0
 """
-    print(parse_data(data))
+    print(parse_data(data, False))
 
 if __name__ == "__main__":
     main()

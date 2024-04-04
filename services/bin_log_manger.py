@@ -2,9 +2,19 @@ import os
 import re
 import json
 
+from utils.connector import fetch_cursor
+from utils.location import fetch_site_id
+
 class BinLogManager:
-    def __init__(self, bin_log_folder):
+    def __init__(self, bin_log_folder, transform_data):
         self.bin_log_folder = bin_log_folder
+        self.transform_data = transform_data
+        result = fetch_cursor()
+        cursor = result[0]
+        connection = result[1]
+        self.site_id = fetch_site_id(cursor)
+        connection.close()
+
 
     def process_logs(self):
         # Get the list of bin log files in the folder
@@ -15,6 +25,7 @@ class BinLogManager:
         bin_log_pop()
 
         if bin_log_files:
+            
             for file in bin_log_files:
                 file_path = os.path.join(self.bin_log_folder, file)
                 result = self.process_file(file_path)
@@ -28,7 +39,7 @@ class BinLogManager:
         try:
             result = subprocess.check_output(f"mysqlbinlog -v {file_path} | grep '###'", shell=True)
             if result:
-                print(f"Processing this content: {result}")
+                data = parse_data(result.decode('utf-8'))
         # catch all exceptions
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
@@ -54,6 +65,8 @@ class BinLogManager:
             table_name = result[0].split('`')[3]
             gems = result[1].strip().split('@')
             data = {}
+            if self.transform_data:
+                data{"site_id": self.site_id}
             for i, gem in enumerate(gems):
                 if gem:
                     key, value = gem.split('=')
