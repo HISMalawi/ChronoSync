@@ -34,7 +34,7 @@ def main():
         if env['FIRST_RUN'] == '0':
             process_first_run(env)
         else:
-            BinLogManager(env).process_logs()
+            BinLogManager(env, table_map).process_logs()
         time.sleep(int(env['SYNC_INTERVAL']))  # sleep for 60 seconds # should updated to use configured time
 
 
