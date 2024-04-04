@@ -2,39 +2,27 @@ import mysql.connector
 
 # import location.py which is in the same directory as first_sync.py
 from utils.location import fetch_site_id
+from utils.connector import fetch_cursor
 
 class FirstSync:
     def __init__(self, env):
-        self.host = env['HOST']
-        self.user = env['USER']
-        self.password = env['PASSWORD']
-        self.database = env['DATABASE']
-        self.port = env['PORT']
+        result = fetch_cursor(env)
+        self.cursor = result[0]
+        self.connection = result[1]
         self.tables = env['TRANS_TABLE'].split(',')
         self.transform = env['TRANSFORM'] == '1' # Convert to boolean
 
     def sync_records(self):
-        # Connect to the database
-        connection = mysql.connector.connect(
-            host=self.host,
-            user=self.user,
-            password=self.password,
-            database=self.database,
-            port=self.port
-        )
-
-        # Create a cursor object to execute SQL queries
-        cursor = connection.cursor(dictionary=True)
-        self.site_id = fetch_site_id(cursor)
+        self.site_id = fetch_site_id(self.cursor)
 
         # Loop through the tables and sync the records
         for table in self.tables:
             self.table = table
-            self.sync_table(cursor)
+            self.sync_table()
 
         # Close the database connection
-        cursor.close()
-        connection.close()
+        self.cursor.close()
+        self.connection.close()
 
     def handle_new_records_query(self):
         # we need to create a special query if the table in question is drug_order otherwise we can use the normal query
@@ -52,17 +40,17 @@ class FirstSync:
         else:
             return f"SELECT * FROM {self.table} WHERE date_changed >= '2024-01-01 00:00:00' AND date_changed <= NOW() AND date_created < '2024-01-01 00:00:00'"
 
-    def sync_table(self, cursor):
+    def sync_table(self,):
         # Sync new records
-        self.sync_new_records(cursor)
-        self.sync_modified_records(cursor)
+        self.sync_new_records()
+        self.sync_modified_records()
     
-    def sync_new_records(self, cursor):
+    def sync_new_records(self):
         if self.table in ['pharmacies', 'cohort_member']:
             return
         query = self.handle_new_records_query()
-        cursor.execute(query)
-        records = cursor.fetchall()
+        self.cursor.execute(query)
+        records = self.cursor.fetchall()
         records_to_sync = []
 
         if self.transform:
@@ -71,13 +59,13 @@ class FirstSync:
         # Sync the transformed records to the central server
         self.sync_to_server(records_to_sync)
 
-    def sync_modified_records(self, cursor):
+    def sync_modified_records(self):
         if self.table in ['relationship', 'cohort_member', 'pharmacy_obs', 'pharmacies', 'drug_order', 'obs', 'orders', 
                           'patient_identifier', 'person_address']:
             return
         query = self.handle_modified_records_query()
-        cursor.execute(query)
-        records = cursor.fetchall()
+        self.cursor.execute(query)
+        records = self.cursor.fetchall()
         records_to_sync = []
 
         if self.transform:
