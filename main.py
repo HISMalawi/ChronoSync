@@ -4,6 +4,7 @@ import time
 # local imports
 from services.first_sync import FirstSync
 from services.map_table import MapTable
+from services.table_manager import TableManager
 
 
 def read_env_in_memory():
@@ -28,74 +29,11 @@ def process_first_run(env):
 def main():
     # Read the environment variables
     env = read_env_in_memory()
+    table_map = TableManager(env).get_table_columns_map()
     while True:
         if env['FIRST_RUN'] == '0':
             process_first_run(env)
         else:
-            # Replace the queries with the actual logs
-            queries = [
-                {
-                    "operation": "UPDATE",
-                    "database": "zomba",
-                    "table": "concept_name",
-                    "data": {
-                        "@1": "183",
-                        "@2": "pistne",
-                        "@3": "en",
-                        "@4": "1",
-                        "@5": "2004-01-01 00:00:00",
-                        "@6": "191",
-                        "@7": "0",
-                        "@8": "1",
-                        "@9": "NULL",
-                        "@10": "NULL",
-                        "@11": "b99728b2-8d80-11d8-abbb-0024217bb78e",
-                        "@12": "FULLY_SPECIFIED",
-                        "@13": "0"
-                    }
-                },
-                {
-                    "operation": "INSERT",
-                    "database": "zomba",
-                    "table": "concept_name",
-                    "data": {
-                        "@1": "183",
-                        "@2": "manzy",
-                        "@3": "",
-                        "@4": "1",
-                        "@5": "2024-04-04 12:57:23",
-                        "@6": "106360",
-                        "@7": "0",
-                        "@8": "NULL",
-                        "@9": "NULL",
-                        "@10": "NULL",
-                        "@11": "e13d76ef-f282-11ee-a254-0242ac110005",
-                        "@12": "NULL",
-                        "@13": "0"
-                    }
-                },
-                {
-                    "operation": "DELETE",
-                    "database": "zomba",
-                    "table": "concept_name",
-                    "data": {
-                        "@1": "183",
-                        "@2": "manzy",
-                        "@3": "",
-                        "@4": "1",
-                        "@5": "2024-04-04 12:57:23",
-                        "@6": "106360",
-                        "@7": "0",
-                        "@8": "NULL",
-                        "@9": "NULL",
-                        "@10": "NULL",
-                        "@11": "e13d76ef-f282-11ee-a254-0242ac110005",
-                        "@12": "NULL",
-                        "@13": "0"
-                    }
-                }
-            ]
-            print('Syncing records... using bin logs')
             data = MapTable(queries=queries, env=env).post_data
             print(data)
 
