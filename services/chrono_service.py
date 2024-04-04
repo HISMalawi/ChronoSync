@@ -15,8 +15,9 @@ def create_service():
     # main_script = '/path/to/your/main.py'
     # this should use pwd to get the current directory
     current_directory = os.getcwd()
-    main_path = os.path.join(current_directory, '../main.py')
+    main_path = os.path.join(current_directory, 'main.py')
     main_script = os.path.abspath(main_path)
+    user = os.environ['USER']
 
     # Check if the service file already exists
     if os.path.exists(service_file):
@@ -28,8 +29,14 @@ def create_service():
 Description=CDR Streaming Service
 
 [Service]
+Type=simple
+User={user}
+WorkingDirectory={current_directory}
 ExecStart=/usr/bin/python3 {main_script}
 Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=cdr
 
 [Install]
 WantedBy=multi-user.target
@@ -46,6 +53,3 @@ WantedBy=multi-user.target
 
     print(f'Service {service_name} created.')
     finalize_installation()
-
-if __name__ == "__main__":
-    create_service()
