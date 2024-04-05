@@ -15,8 +15,10 @@ class TableManager:
             columns = self.cursor.fetchall()
             column_dict = {}
             # now we want something like this {'@1': 'id', '@2': 'name', '@3': 'age'}
-            for index, column in enumerate(columns, start=1):
-                column_dict[f"@{index + 1}"] = column[index]
+            for index, column in enumerate(columns):
+                key = f"@{index + 1}"
+                if column:
+                    column_dict[key] = column['Field']
             table_columns_map[table_name] = column_dict
         
         return table_columns_map

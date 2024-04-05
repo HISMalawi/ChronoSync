@@ -2,7 +2,7 @@ import json
 
 from utils.location import fetch_site_id
 from utils.connector import fetch_cursor
-from sync_manager import SyncManager
+from .sync_manager import SyncManager
 
 class FirstSync:
     def __init__(self, env):

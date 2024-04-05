@@ -1,18 +1,19 @@
 import os
 import re
 import json
+import subprocess
 
 from utils.connector import fetch_cursor
 from utils.location import fetch_site_id
-from sync_manager import SyncManager
-from log_converter import process_list
+from .sync_manager import SyncManager
+from .log_converter import process_list
 
 class BinLogManager:
     def __init__(self, env, table_columns_map):
         self.env = env
         self.bin_log_folder = env['LOG_PATH']
         self.transform_data = env['TRANSFORM'] == '1'
-        result = fetch_cursor()
+        result = fetch_cursor(self.env)
         cursor = result[0]
         connection = result[1]
         self.site_id = fetch_site_id(cursor)
@@ -25,11 +26,12 @@ class BinLogManager:
         bin_log_files = os.listdir(self.bin_log_folder)
         pattern = r"(.*)-bin.(\d+)"
         bin_log_files = [file for file in bin_log_files if re.match(pattern, file)]
+        # skip files that end with 000001 and 000002
+        bin_log_files = [file for file in bin_log_files if not file.endswith('000001') and not file.endswith('000002')]
         bin_log_files.sort()
-        bin_log_pop()
 
         if bin_log_files:
-            
+            bin_log_files.pop()
             for file in bin_log_files:
                 file_path = os.path.join(self.bin_log_folder, file)
                 result = self.process_file(file_path)
@@ -41,9 +43,10 @@ class BinLogManager:
 
     def process_file(self, file_path):
         try:
-            result = subprocess.check_output(f"mysqlbinlog -v {file_path} | grep '###'", shell=True)
+            result = subprocess.check_output(f"mysqlbinlog -v {file_path} | grep '### '", shell=True)
             if result:
-                data = parse_data(result.decode('utf-8'))
+                afcon = str(result.decode('utf-8'))
+                data = self.parse_data(afcon)
                 SyncManager(self.env).process_data(process_list(data, self.table_columns_map))
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
@@ -70,7 +73,7 @@ class BinLogManager:
             gems = result[1].strip().split('@')
             data = {}
             if self.transform_data:
-                data{"site_id": self.site_id}
+                data["site_id"] = self.site_id
             for i, gem in enumerate(gems):
                 if gem:
                     key, value = gem.split('=')
